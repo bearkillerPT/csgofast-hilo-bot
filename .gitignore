@@ -1,0 +1,37 @@
+# Ignore Python cache
+__pycache__/
+
+# Playwright / browser profile and user data
+my_profile/
+Default/
+component_crx_cache/
+extensions_crx_cache/
+Crashpad/
+
+# Chrome/Chromium caches and DBs
+Cache/
+GPUCache/
+ShaderCache/
+GraphiteDawnCache/
+blob_storage/
+
+# Application state / DB artifacts
+*.db
+*-journal
+*.db-journal
+Local State
+Login Data
+Login Data-journal
+History
+History-journal
+Web Data
+Web Data-journal
+
+# Logger output and other generated logs
+logs/
+*.log
+game_logs.csv
+
+# Misc
+*.old
+*.pb
