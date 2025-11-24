@@ -6,4 +6,4 @@ This package exposes strategy classes with a common API:
 Add more strategies here as needed.
 """
 
-__all__ = ["MartingaleStrategy", "ParoliStrategy"]
+__all__ = ["MartingaleStrategy", "ParoliStrategy", "FractionalStrategy"]

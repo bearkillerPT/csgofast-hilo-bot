@@ -2,39 +2,39 @@ from os import path, environ, makedirs
 from time import sleep
 from playwright.sync_api import sync_playwright
 from logger import FileLogger
-from strategies.paroli import ParoliStrategy
-from strategies.martingale import MartingaleStrategy
+from config import EnvConfig
 
 free_coins_btn = ".valve-btn"
 hilo_value_input = ".app_input"
 current_money_span = ".free-coins"
 bet_red_btn = ".colorRed"
 countdown_timer_span = ".progress-bar__container"
-default_bet_amount = 25
 
 # initialize logger (file will be created in the project folder)
-# Choose strategy: 'paroli' or 'martingale' (case-insensitive)
-STRATEGY = environ.get("BET_STRATEGY", "paroli").lower()
-
 # Prepare logs directory and strategy-specific filename
 # Use a local logs/ folder inside the project (next to this file)
 project_root = path.dirname(path.abspath(__file__))
 logs_dir = path.join(project_root, "logs")
 makedirs(logs_dir, exist_ok=True)
 
-if STRATEGY == "martingale":
-    log_file = path.join(logs_dir, "martingale_game_logs.csv")
-else:
-    # default to Paroli
-    log_file = path.join(logs_dir, "paroli_game_logs.csv")
+# Load configuration (this will read .env if present) and build the strategy
+cfg = EnvConfig(project_root)
+strategy_name = cfg.strategy_name
+log_file = path.join(logs_dir, f"{strategy_name}_game_logs.csv")
 
 logger = FileLogger(log_file)
+
+# Use configured base bet from env (falls back to 25 if not set)
+default_bet_amount = cfg.base_bet
+
+# Instantiate the configured strategy (use default_bet as fallback)
+strategy = cfg.get_strategy(default_bet_amount)
 
 
 def get_current_money(page):
     page.wait_for_selector(current_money_span)
     money_text = page.query_selector(current_money_span).inner_text()
-    money_value = float(money_text.replace(",", ".").replace('\n',''))
+    money_value = float(money_text.replace(",", ".").replace(' ','').replace('\n',''))
     print(f"Current Money: {money_value}")
     return money_value
 
@@ -46,6 +46,7 @@ def get_countdown_timer(page):
     
 def collect_rewards(page):
     page.goto("https://csgofast.com/free-coins")
+    page.wait_for_timeout(1000)
     free_coins = page.wait_for_selector(free_coins_btn)
     free_coins.click()
     # log that we attempted to collect free coins
@@ -62,16 +63,15 @@ def play_hilo(page):
     current_bet = default_bet_amount
     last_money = get_current_money(page)
 
-    # choose strategy based on BET_STRATEGY env var
-    if STRATEGY == "martingale":
-        strategy = MartingaleStrategy(base_bet=default_bet_amount, multiplier=2)
-    else:
-        strategy = ParoliStrategy(base_bet=default_bet_amount, multiplier=2, target_streak=3)
-
+    # Strategy is created from configuration (see config.EnvConfig)
+    # `strategy` is available from the module-level config created above.
+        
     while get_current_money(page) > 0:
         page.wait_for_selector(countdown_timer_span)
         # place the current bet
         placed_bet = current_bet
+        if hilo_input is None:
+            return
         hilo_input.fill(str(placed_bet))
         red_btn = page.query_selector(bet_red_btn)
         red_btn.click()

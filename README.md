@@ -35,6 +35,16 @@ python farm_hilo.py
 - Strategies (in `strategies/`):
   - Martingale — double after a loss, reset on win.
   - Paroli — increase after wins up to a target streak, then reset.
+  - Fractional (Kelly-style) — bet a fraction of your balance that depends on
+    your current bankroll. This repo's `FractionalStrategy` follows the user's
+    specification:
+      * Small balances (< 500): bet 100% (all-in).
+      * Medium balances (500–5000): bet between ~75% (at the low end) and ~50%
+        (at the high end) — the implementation linearly interpolates the
+        fraction across this band.
+      * High balances (>= 5000): use a smaller fraction (default ~25%) to
+        reduce variance.
+    The file is `strategies/fractional.py` and exposes `FractionalStrategy`.
 
 That's all. Keep it minimal.
 
