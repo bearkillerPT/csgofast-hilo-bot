@@ -1,31 +1,21 @@
-## CSGOFast bot
+# CSGOFast bot
 
+## Instalation
 - Install Playwright:
-
-```powershell
-pip3 install playwright
-## Quick README
-
-- Install Playwright:
-
 ```powershell
 pip3 install playwright
 playwright install
 ```
 
-- Optional env (choose strategy):
-
-```powershell
-# $env:BET_STRATEGY = "paroli"    # or "martingale" (default: paroli)
-```
-
-- Run the bot:
-
+## Running
+The hilo bot can be ran with:
 ```powershell
 python farm_hilo.py
 ```
+This will spawn a chromimum browser window that the bot controls.
 
-- First run: log in to csgofast and open the Free Coins tab. Later runs reuse `my_profile` so the bot should find you logged in and you just need to click the Free Coins tab to start.
+- First time use: log in to csgofast and, afterwards, open the Free Coins tab. 
+- Later uses: the browser will reuse `my_profile` so you just need to click the Free Coins tab to start.
 
 - What the bot does:
   1. Clicks Free Coins to claim the 100 free coins (even if you still have a positive balance).
@@ -45,7 +35,5 @@ python farm_hilo.py
       * High balances (>= 5000): use a smaller fraction (default ~25%) to
         reduce variance.
     The file is `strategies/fractional.py` and exposes `FractionalStrategy`.
-
-That's all. Keep it minimal.
 
 Note: see `.env` for example parameters for each strategy.
