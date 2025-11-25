@@ -21,14 +21,14 @@ the user's tiers and configurable parameters.
 class FractionalStrategy:
     def __init__(
         self,
-        min_bet=1,
-        max_bet=None,
+        min_bet=25,
+        max_bet=500,
         small_threshold=500,
         medium_threshold=5000,
-        small_fraction=1.0,
-        medium_fraction=0.5,
-        medium_max_fraction=0.75,
-        high_fraction=0.25,
+        small_fraction=0.02,            # 2% when bankroll < 500
+        medium_fraction=0.04,           # 4% near 5000
+        medium_max_fraction=0.06,       # 6% near 500
+        high_fraction=0.03              # 3% above 5000
     ):
         """Create a FractionalStrategy.
 

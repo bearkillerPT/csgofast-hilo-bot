@@ -9,6 +9,7 @@ hilo_value_input = ".app_input"
 current_money_span = ".free-coins"
 bet_red_btn = ".colorRed"
 countdown_timer_span = ".progress-bar__container"
+app_button = ".app_button"
 
 # initialize logger (file will be created in the project folder)
 # Prepare logs directory and strategy-specific filename
@@ -35,7 +36,6 @@ def get_current_money(page):
     page.wait_for_selector(current_money_span)
     money_text = page.query_selector(current_money_span).inner_text()
     money_value = float(money_text.replace(",", ".").replace(' ','').replace('\n',''))
-    print(f"Current Money: {money_value}")
     return money_value
 
 def get_countdown_timer(page):
@@ -49,30 +49,44 @@ def collect_rewards(page):
     page.wait_for_timeout(1000)
     free_coins = page.wait_for_selector(free_coins_btn)
     free_coins.click()
+
     # log that we attempted to collect free coins
-    try:
-        current = get_current_money(page)
-    except Exception:
-        current = None
-    logger.log_event("collect_rewards", details=f"clicked free coins; balance={current}")
+    logger.log_event("collect_rewards", details=f"clicked free coins; balance={get_current_money(page)}")
 
 def play_hilo(page):
     page.goto("https://csgofast.com/free-coins/hilo")
     page.wait_for_selector(hilo_value_input)
     hilo_input = page.query_selector(hilo_value_input)
-    current_bet = default_bet_amount
-    last_money = get_current_money(page)
+    current_money = get_current_money(page)
+    last_money = current_money
+    current_bet = default_bet_amount if current_money > default_bet_amount else current_money
 
     # Strategy is created from configuration (see config.EnvConfig)
     # `strategy` is available from the module-level config created above.
         
-    while get_current_money(page) > 0:
+    while current_money > 0:
         page.wait_for_selector(countdown_timer_span)
         # place the current bet
         placed_bet = current_bet
-        if hilo_input is None:
-            return
-        hilo_input.fill(str(placed_bet))
+        print(f"Current Money: {current_money}, Placed Bet: {placed_bet}")
+        
+        if current_bet == current_money or current_bet >= 500:
+            # select all app_buttons and click on the one with " All " written on it
+            buttons = page.query_selector_all(app_button)
+            for button in buttons:
+                if "All" in button.inner_text():
+                    try:
+                        button.click()
+                    except Exception as e:
+                        print(f"Error clicking 'All' button: {e}")
+                        return
+            
+        else:
+            try:
+                hilo_input.fill(str(placed_bet))
+            except Exception as e:
+                print(f"Error filling hilo input: {e}")
+                return
         red_btn = page.query_selector(bet_red_btn)
         red_btn.click()
 
@@ -103,7 +117,6 @@ def play_hilo(page):
         
         
         
-        
 
 
 with sync_playwright() as p:
@@ -116,8 +129,8 @@ with sync_playwright() as p:
     page.wait_for_timeout(2000)
     page.wait_for_url("https://csgofast.com/free-coins")
     
-    # your repeated actions
     while True:
         # Login and go to the free coins page
         collect_rewards(page)
         play_hilo(page)
+        page.wait_for_timeout(1000)

@@ -29,7 +29,10 @@ class MartingaleStrategy:
                 if balance_after == 0:
                     self.current_bet = 0
                     return 0
-                self.current_bet = balance_after
+                elif balance_after < 100: # low balance all in
+                    self.current_bet = balance_after
+                else:
+                    self.current_bet = balance_after
                 return balance_after
 
             self.current_bet = next_bet
