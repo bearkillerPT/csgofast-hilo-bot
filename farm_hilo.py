@@ -1,8 +1,10 @@
 from os import path, environ, makedirs
 from time import sleep
+from datetime import datetime
 from playwright.sync_api import sync_playwright
-from logger import FileLogger
+from logger import FileLogger, get_latest_tickets_iso_date
 from config import EnvConfig
+from farm_ticktes import collect_tickets_routine
 
 free_coins_btn = ".valve-btn"
 hilo_value_input = ".app_input"
@@ -46,25 +48,32 @@ def get_countdown_timer(page):
     
 def collect_rewards(page):
     page.goto("https://csgofast.com/free-coins")
-    page.wait_for_timeout(1000)
+    page.wait_for_timeout(2500)
     free_coins = page.wait_for_selector(free_coins_btn)
     free_coins.click()
 
     # log that we attempted to collect free coins
     logger.log_event("collect_rewards", details=f"clicked free coins; balance={get_current_money(page)}")
 
-def play_hilo(page):
+def load_hilo_page(page):
     page.goto("https://csgofast.com/free-coins/hilo")
     page.wait_for_selector(hilo_value_input)
+
+def play_hilo(page):
+    load_hilo_page(page)
     hilo_input = page.query_selector(hilo_value_input)
     current_money = get_current_money(page)
     last_money = current_money
     current_bet = default_bet_amount if current_money > default_bet_amount else current_money
-
-    # Strategy is created from configuration (see config.EnvConfig)
-    # `strategy` is available from the module-level config created above.
         
     while current_money > 0:
+        collect_tickets_routine(page)
+        
+        if page.url != "https://csgofast.com/free-coins/hilo":
+            load_hilo_page(page)
+            hilo_input = page.query_selector(hilo_value_input)
+            page.wait_for_timeout(1000)
+         
         page.wait_for_selector(countdown_timer_span)
         # place the current bet
         placed_bet = current_bet
@@ -107,7 +116,11 @@ def play_hilo(page):
 
         # ask the chosen strategy for the next bet
         next_bet = strategy.record_result(result, placed_bet, current_money)
-
+        
+        # Don't try to repeatedly bet 500 if the max iterations are reached
+        if next_bet > 500:
+            next_bet = default_bet_amount
+        
         # log the resolved bet (log the bet we placed, not the next bet)
         logger.log_bet(placed_bet, result, balance_before=last_money, balance_after=current_money)
 
@@ -130,7 +143,6 @@ with sync_playwright() as p:
     page.wait_for_url("https://csgofast.com/free-coins")
     
     while True:
-        # Login and go to the free coins page
         collect_rewards(page)
         play_hilo(page)
         page.wait_for_timeout(1000)

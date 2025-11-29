@@ -63,7 +63,7 @@ class FileLogger:
 
     def log_event(self, event_type: str, details: str = "", timestamp: str = None):
         if timestamp is None:
-            timestamp = datetime.utcnow().isoformat()
+            timestamp = datetime.now().isoformat()
         row = {
             "timestamp": timestamp,
             "type": event_type,
@@ -75,5 +75,18 @@ class FileLogger:
         }
         self._write_row(row)
 
+def get_latest_tickets_iso_date() -> str:
+    """Return the timestamp of the latest tickets log entry.
 
-__all__ = ["FileLogger"]
+    Returns None if no tickets log exists.
+    """
+    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs", "farm_tickets_logs.csv")
+    if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+        return None
+
+    with open(file_path, "r", encoding="utf-8") as fh:
+        last_line = fh.readlines()[-1]
+        row = dict(zip(FileLogger.DEFAULT_FIELDS, last_line.strip().split(",")))
+        return row["timestamp"]
+
+__all__ = ["FileLogger", "get_latest_tickets_iso_date"]

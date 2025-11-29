@@ -1,4 +1,14 @@
 # CSGOFast bot
+This is a pyton3 + playwright bot to farm the CSGOFast free coins / tickets.
+The game conditions are:
+- Every time the balance is 0, you can claim 100 free coins;
+- HiLo max bet is 500 coins;
+- you've a 47.5% chance to double per bet;
+- 1.000.000 coins is 1$
+
+With that said, even with a strategy, the odds are incredibly against you. Here's the plot of my balance over a few days (mostly using the Martingale strategy with 1.6x multiplier and 47.68 base bet):
+
+<img src="./stats.png" alt="Balance over time" width="600"/>
 
 ## Instalation
 - Install Playwright:

@@ -119,7 +119,7 @@ def main(argv: List[str] | None = None) -> int:
         return 2
 
     out_path = Path(args.out)
-    plot_traces(files, out_path, show=args.show)
+    plot_traces(files, out_path, show=True)
     return 0
 
 
